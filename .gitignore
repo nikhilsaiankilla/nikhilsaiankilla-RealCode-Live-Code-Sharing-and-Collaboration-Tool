@@ -1,0 +1,64 @@
+# Node.js dependencies (both frontend and backend)
+**/node_modules/
+
+# Logs (both frontend and backend)
+**/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Build output
+**/dist/
+**/build/
+
+# Cache and temporary files
+**/.cache/
+**/tmp/
+*.tmp
+*.temp
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Test coverage reports
+**/coverage/
+
+# Dependency directories
+.npm/
+.pnp/
+.pnp.js
+
+# Static files cache (optional for frontend frameworks)
+**/public/static/
+
+# Generated files for React or Angular
+**/frontend/.next/
+**/frontend/.angular/
+
+# Linting and formatting
+.eslintcache
+.prettiercache
+
+# Optional lock files for package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Debugger and patch files
+*.rej
+*.orig
+
+# Backend-specific
+backend/uploads/
+backend/public/
