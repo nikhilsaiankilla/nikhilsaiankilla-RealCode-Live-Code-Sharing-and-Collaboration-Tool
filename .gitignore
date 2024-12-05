@@ -59,6 +59,6 @@ pnpm-lock.yaml
 *.rej
 *.orig
 
-# Backend-specific
+# Backend-specific files
 backend/uploads/
 backend/public/
