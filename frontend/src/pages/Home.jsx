@@ -1,63 +1,90 @@
-import { useState } from 'react';
-import { v4 } from 'uuid'
-import { toast } from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import { v4 as uuidV4 } from 'uuid';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+
 const Home = () => {
     const navigate = useNavigate();
-    const [roomId, setRoomId] = useState("");
-    const [userName, setUserName] = useState("");
 
-    const handleCreateRoom = (e) => {
+    const [roomId, setRoomId] = useState('');
+    const [username, setUsername] = useState('');
+
+    const createNewRoom = (e) => {
         e.preventDefault();
-
-        //generates unique id
-        const id = v4();
+        const id = uuidV4();
         setRoomId(id);
+        toast.success('Created a new room');
+    };
 
-        toast.success("created a new room")
-    }
-
-    const handleJoinRoom = () => {
-        if (!roomId || !userName) {
-            toast.error("ROOM ID AND USER NAME REQUIRED");
+    const joinRoom = () => {
+        if (!roomId || !username) {
+            toast.error('ROOM ID & username is required');
             return;
         }
 
-        //REDIRECT
+        // Redirect
         navigate(`/editor/${roomId}`, {
             state: {
-                userName
-            }
-        })
-    }
+                username,
+            },
+        });
+    };
 
-    const handleKeyEnter = (e) => {
+    const handleInputEnter = (e) => {
         if (e.code === 'Enter') {
-            handleJoinRoom();
+            joinRoom();
         }
-    }
+    };
 
     return (
-        <div className='homePageWrapper'>
-            <div className='FormWrapper'>
-                <h1>My Own online Compailer</h1>
-                <h3>paste invitation room id</h3>
-                <div className='inputGroup'>
-                    <input type="text" className='inputBox' placeholder='ROOM ID' onChange={(e) => setRoomId(e.target.value)} value={roomId} onKeyUp={handleKeyEnter} />
-                    <input type="text" className='inputBox' placeholder='USER NAME' onChange={(e) => setUserName(e.target.value)} value={userName} onKeyUp={handleKeyEnter} />
-                    <button className='btn joinBtn' onClick={handleJoinRoom}>join</button>
-                    <span className='createInfo'>
-                        if you don't have an invite then create &nbsp;
-                        <a href="" onClick={handleCreateRoom} className='createNewBtn'>new room</a>
+        <div className="homePageWrapper">
+            <div className="formWrapper">
+                <img
+                    className="homePageLogo"
+                    src={`/public/RealCode.png`}
+                    alt="code-sync-logo"
+                />
+                <h4 className="mainLabel">Paste invitation ROOM ID</h4>
+                <div className="inputGroup">
+                    <input
+                        type="text"
+                        className="inputBox"
+                        placeholder="ROOM ID"
+                        onChange={(e) => setRoomId(e.target.value)}
+                        value={roomId}
+                        onKeyUp={handleInputEnter}
+                    />
+                    <input
+                        type="text"
+                        className="inputBox"
+                        placeholder="USERNAME"
+                        onChange={(e) => setUsername(e.target.value)}
+                        value={username}
+                        onKeyUp={handleInputEnter}
+                    />
+                    <button className="btn joinBtn" onClick={joinRoom}>
+                        Join
+                    </button>
+                    <span className="createInfo">
+                        If you don't have an invite then create &nbsp;
+                        <a
+                            onClick={createNewRoom}
+                            href="#"
+                            className="createNewBtn"
+                        >
+                            new room
+                        </a>
                     </span>
                 </div>
             </div>
-
             <footer>
-                <h4>build with 💛 by nikhil sai</h4>
+                <h4>
+                    Built with 💛 &nbsp; by &nbsp;
+                    <a href="https://github.com/codersgyan">Coder's Gyan</a>
+                </h4>
             </footer>
         </div>
-    )
-}
+    );
+};
 
-export default Home
+export default Home;

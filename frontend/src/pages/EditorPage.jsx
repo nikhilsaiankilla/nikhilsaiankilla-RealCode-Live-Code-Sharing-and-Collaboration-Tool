@@ -1,100 +1,152 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { useParams, useLocation, useNavigate } from 'react-router'
-import { toast } from 'react-hot-toast'
-
+import React, { useState, useRef, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { ACTIONS } from '../actions';
 import Client from '../components/Client';
 import Editor from '../components/Editor';
-
-import { initSocket } from '../socket'
-import { ACTIONS } from '../actions';
-
+import { initSocket } from '../socket';
+import { useLocation, useNavigate, Navigate, useParams } from 'react-router-dom';
 
 const EditorPage = () => {
-  const [clients, setClients] = useState([]);
-  const { roomId } = useParams();
+    const socketRef = useRef(null);
+    const codeRef = useRef(null);
+    const location = useLocation();
+    const { roomId } = useParams();
+    const reactNavigator = useNavigate();
+    const [clients, setClients] = useState([]);
+    const socketInitialized = useRef(false);
 
-  const socketRef = useRef(null);
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const hasJoined = useRef(false); // Add this line
-
-useEffect(() => {
-  const init = async () => {
-    try {
-      socketRef.current = await initSocket();
-
-      socketRef.current.on('connect_error', (err) => handleErrors(err));
-      socketRef.current.on('connect_failed', (err) => handleErrors(err));
-
-      if (!hasJoined.current) {
-        socketRef.current.emit(ACTIONS.JOIN, {
-          roomId,
-          userName: location.state?.userName
-        });
-        hasJoined.current = true; // Set this to true after joining
-      }
-
-      socketRef.current.on(ACTIONS.JOINED, ({ clients, socketId, userName }) => {
-        if (userName !== location.state?.userName) {
-          toast.success(`${userName} joined the room`);
+    useEffect(() => {
+        console.log('EditorPage mounted');
+        
+        if (!location.state) {
+            console.log('Location state not found, redirecting...');
+            return <Navigate to="/" />;
         }
-        setClients(clients);
-      });
 
-      socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, userName }) => {
-        toast.success(`${userName} left the room.`);
-        setClients((prev) => prev.filter(client => client.socketId !== socketId));
-      });
+        console.log('roomId:', roomId);
+        console.log('Username:', location.state?.username);
 
-    } catch (error) {
-      handleErrors(error);
-    }
-  };
-  init();
-
-  return () => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current.off(ACTIONS.JOIN);
-      socketRef.current.off(ACTIONS.JOINED);
-    }
-  };
-}, []);
-
-
-  const handleErrors = (err) => {
-    console.log("socket error", err);
-
-    toast.error('socket connection failed try again later');
-    navigate('/');
-  }
-
-  if (!location.state) {
-    navigate('/');
-  }
-
-  return (
-    <div className='mainWrap'>
-      <div className='aside'>
-        <div className='asideInner'>
-          <h1>My Own online Compailer</h1>
-          <h3>connected</h3>
-          <div className="clientsList">
-            {
-              clients.map(client => (<Client client={client} key={client?.socketId} />))
+        const init = async () => {
+            if (socketInitialized.current) {
+                console.log('Socket already initialized');
+                return;
             }
-          </div>
+
+            console.log('Initializing socket...');
+            try {
+                socketRef.current = await initSocket();
+
+                socketRef.current.on('connect_error', (err) => handleErrors(err));
+                socketRef.current.on('connect_failed', (err) => handleErrors(err));
+
+                function handleErrors(e) {
+                    console.error('Socket error:', e);
+                    toast.error('Socket connection failed, try again later.');
+                    reactNavigator('/');
+                }
+
+                socketRef.current.emit(ACTIONS.JOIN, {
+                    roomId,
+                    username: location.state?.username,
+                });
+
+                socketRef.current.on(ACTIONS.JOINED, ({ clients, username, socketId }) => {
+                    if (username !== location.state?.username) {
+                        toast.success(`${username} joined the room.`);
+                    }
+                    setClients(clients);
+                    socketRef.current.emit(ACTIONS.SYNC_CODE, {
+                        code: codeRef.current,
+                        socketId,
+                    });
+                });
+
+                socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
+                    toast.success(`${username} left the room.`);
+                    setClients((prev) =>
+                        prev.filter((client) => client.socketId !== socketId)
+                    );
+                });
+
+                socketInitialized.current = true;
+            } catch (err) {
+                console.error('Error initializing socket:', err);
+                toast.error('Could not connect to socket. Please try again.');
+                reactNavigator('/');
+            }
+        };
+
+        init();
+
+        return () => {
+            console.log('EditorPage unmounted');
+            if (socketRef.current && socketInitialized.current) {
+                console.log('Disconnecting socket...');
+                socketRef.current.disconnect();
+                socketRef.current.off(ACTIONS.JOINED);
+                socketRef.current.off(ACTIONS.DISCONNECTED);
+            }
+        };
+    }, [roomId, location.state?.username]);
+
+    async function copyRoomId() {
+        try {
+            await navigator.clipboard.writeText(roomId);
+            toast.success('Room ID has been copied to your clipboard');
+        } catch (err) {
+            toast.error('Could not copy the Room ID');
+            console.error(err);
+        }
+    }
+
+    function leaveRoom() {
+        reactNavigator('/');
+    }
+
+    if (!location.state) {
+        console.log('Location state not found, redirecting...');
+        return <Navigate to="/" />;
+    }
+
+    return (
+        <div className="mainWrap">
+            <div className="aside">
+                <div className="asideInner">
+                    <div className="logo">
+                        <img
+                            className="logoImage"
+                            src="/RealCode.png"
+                            alt="logo"
+                        />
+                    </div>
+                    <h3>Connected</h3>
+                    <div className="clientsList">
+                        {clients.map((client) => (
+                            <Client
+                                key={client.socketId}
+                                username={client.username}
+                            />
+                        ))}
+                    </div>
+                </div>
+                <button className="btn copyBtn" onClick={copyRoomId}>
+                    Copy ROOM ID
+                </button>
+                <button className="btn leaveBtn" onClick={leaveRoom}>
+                    Leave
+                </button>
+            </div>
+            <div className="editorWrap">
+                <Editor
+                    socketRef={socketRef}
+                    roomId={roomId}
+                    onCodeChange={(code) => {
+                        codeRef.current = code;
+                    }}
+                />
+            </div>
         </div>
+    );
+};
 
-        <button className='btn copyBtn'>Copy room id</button>
-        <button className='btn leaveBtn'>leave</button>
-      </div>
-      <div className='editorWrap'>
-        <Editor socketRef={socketRef} roomId={roomId} />
-      </div>
-    </div>
-  )
-}
-
-export default EditorPage
+export default EditorPage;

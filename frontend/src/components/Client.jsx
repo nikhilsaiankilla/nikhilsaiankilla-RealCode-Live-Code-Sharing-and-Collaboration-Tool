@@ -1,14 +1,13 @@
-import Avatar from 'react-avatar'
+import React from 'react';
+import Avatar from 'react-avatar';
 
-const Client = ({ client }) => {
+const Client = ({ username }) => {
     return (
-        <div key={client?.socketId}>
-            <Avatar name={client?.userName} size={40} round="14px" />
-            <span>
-                {client?.userName}
-            </span>
+        <div className="client">
+            <Avatar name={username} size={50} round="14px" />
+            <span className="userName">{username}</span>
         </div>
-    )
-}
+    );
+};
 
-export default Client
+export default Client;

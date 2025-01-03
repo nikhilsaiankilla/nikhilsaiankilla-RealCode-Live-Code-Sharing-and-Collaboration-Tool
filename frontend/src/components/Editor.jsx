@@ -10,21 +10,20 @@ const Editor = ({ roomId, socketRef }) => {
     const viewRef = useRef(null);
 
     useEffect(() => {
-        // Define compartments for dynamic reconfiguration
         const languageCompartment = new Compartment();
         const tabSizeCompartment = new Compartment();
 
-        // Initialize editor with compartments and basic setup
         const state = EditorState.create({
             doc: 'console.log("Hello, Welcome to my code editor")',
             extensions: [
                 basicSetup,
                 languageCompartment.of(javascript()),
-                tabSizeCompartment.of(EditorState.tabSize.of(4)), // Set initial tab size to 4
+                tabSizeCompartment.of(EditorState.tabSize.of(4)),
                 oneDark,
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged) {
                         const code = update.state.doc.toString();
+                        console.log('Code changed, emitting:', code);
                         socketRef.current.emit(ACTIONS.CODE_CHANGE, {
                             roomId,
                             code,
@@ -34,7 +33,6 @@ const Editor = ({ roomId, socketRef }) => {
             ],
         });
 
-        // Create EditorView
         const view = new EditorView({
             state,
             parent: editorRef.current,
@@ -42,24 +40,20 @@ const Editor = ({ roomId, socketRef }) => {
 
         viewRef.current = view;
 
-        // Function to dynamically change tab size
         function setTabSize(size) {
             view.dispatch({
                 effects: tabSizeCompartment.reconfigure(EditorState.tabSize.of(size)),
             });
         }
 
-        // Set tab size dynamically, e.g., to 2
         setTabSize(2);
 
         if (socketRef.current) {
-            socketRef.current.on(ACTIONS.CODE_CHANGE, (code) => {
-                console.log("Received code change:", code); // Debugging log
+            socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
                 if (code !== null && viewRef.current) {
                     const currentCode = viewRef.current.state.doc.toString();
                     if (code !== currentCode) {
-                        console.log("Updating editor with new code:", code); // Debugging log
-                        // Update the entire document with the new code
+                        console.log("Updating editor with new code:", code);
                         viewRef.current.dispatch({
                             changes: { from: 0, to: viewRef.current.state.doc.length, insert: code },
                         });
@@ -67,36 +61,14 @@ const Editor = ({ roomId, socketRef }) => {
                 }
             });
         }
-        // Cleanup on component unmount
+
         return () => {
             view.destroy();
+            if (socketRef.current) {
+                socketRef.current.off(ACTIONS.CODE_CHANGE);
+            }
         };
     }, [roomId, socketRef]);
-
-    // useEffect(() => {
-    //     if (socketRef.current) {
-    //         socketRef.current.on(ACTIONS.CODE_CHANGE, (code) => {
-    //             console.log("Received code change:", code); // Debugging log
-    //             if (code !== null && viewRef.current) {
-    //                 const currentCode = viewRef.current.state.doc.toString();
-    //                 if (code !== currentCode) {
-    //                     console.log("Updating editor with new code:", code); // Debugging log
-    //                     // Update the entire document with the new code
-    //                     viewRef.current.dispatch({
-    //                         changes: { from: 0, to: viewRef.current.state.doc.length, insert: code },
-    //                     });
-    //                 }
-    //             }
-    //         });
-    //     }
-
-    //     // Cleanup the socket listener on component unmount
-    //     return () => {
-    //         if (socketRef.current) {
-    //             socketRef.current.off(ACTIONS.CODE_CHANGE);
-    //         }
-    //     };
-    // }, [socketRef]);
 
     return <div ref={editorRef} style={{ height: "100%", width: "100%" }} />;
 };
