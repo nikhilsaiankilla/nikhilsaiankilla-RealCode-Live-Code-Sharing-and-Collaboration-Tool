@@ -10,7 +10,6 @@ const io = new Server(server);
 
 const userSocketMap = {};
 
-// Function to get all connected clients in a room
 function getAllConnectedClients(roomId) {
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
         (socketId) => ({
@@ -20,14 +19,14 @@ function getAllConnectedClients(roomId) {
     );
 }
 
-// Serve the React build folder
-const buildPath = path.join(__dirname, '../client/build');
-app.use(express.static(buildPath));
+// // Serve the React build folder
+// const buildPath = path.join(__dirname, '../client/build');
+// app.use(express.static(buildPath));
 
-// Fallback to `index.html` for React routes
-app.get('*', (req, res) => {
-    res.sendFile(path.join(buildPath, 'index.html'));
-});
+// // Fallback to `index.html` for React routes
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(buildPath, 'index.html'));
+// });
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
