@@ -41,7 +41,7 @@ const Home = () => {
             <div className="formWrapper">
                 <img
                     className="homePageLogo"
-                    src={`/public/RealCode.png`}
+                    src={`/RealCode.png`}
                     alt="code-sync-logo"
                 />
                 <h4 className="mainLabel">Paste invitation ROOM ID</h4>
@@ -80,7 +80,7 @@ const Home = () => {
             <footer>
                 <h4>
                     Built with 💛 &nbsp; by &nbsp;
-                    <a href="https://github.com/codersgyan">Coder's Gyan</a>
+                    <a href="https://github.com/nikhilsaiankilla/">Nikhil Sai</a>
                 </h4>
             </footer>
         </div>
