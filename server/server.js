@@ -8,14 +8,9 @@ const ACTIONS = require('./action');
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static('build'));
-
-app.use((req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
-
 const userSocketMap = {};
 
+// Function to get all connected clients in a room
 function getAllConnectedClients(roomId) {
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
         (socketId) => ({
@@ -25,14 +20,21 @@ function getAllConnectedClients(roomId) {
     );
 }
 
+// Serve the React build folder
+const buildPath = path.join(__dirname, '../client/build');
+app.use(express.static(buildPath));
+
+// Fallback to `index.html` for React routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
+});
+
+// Socket.io connection handling
 io.on('connection', (socket) => {
     console.log('Socket connected:', socket.id);
 
     socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
-        // Ensure the user is not already in the room
-        if (userSocketMap[socket.id]) {
-            return;
-        }
+        if (userSocketMap[socket.id]) return;
 
         userSocketMap[socket.id] = username;
         socket.join(roomId);
@@ -71,5 +73,6 @@ io.on('connection', (socket) => {
     });
 });
 
+// Start the server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
